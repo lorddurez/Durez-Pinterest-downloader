@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DUREZ Stickers</title>
+    <style>
+        :root {
+            --bg-color: #0a0a0a;
+            --text-color: #ffffff;
+            --primary-blue: #00f0ff;
+            --card-bg: #1a1a1a;
+            --danger-red: #ff3333;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Navbar */
+        .navbar {
+            width: 100%;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(10, 10, 10, 0.9);
+            border-bottom: 1px solid #333;
+            position: sticky;
+            top: 0;
+            box-sizing: border-box;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 900;
+            color: var(--primary-blue);
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+        }
+
+        .nav-btn {
+            background-color: transparent;
+            color: var(--primary-blue);
+            border: 1px solid var(--primary-blue);
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        /* Sections */
+        .section {
+            width: 90%;
+            max-width: 600px;
+            margin-top: 40px;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 28px;
+        }
+
+        /* Search Bar */
+        .search-bar {
+            width: 100%;
+            padding: 12px;
+            border-radius: 25px;
+            border: 1px solid #333;
+            background-color: var(--card-bg);
+            color: white;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+        }
+
+        .search-bar:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+
+        /* Packs Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .pack-card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #333;
+            transition: 0.3s;
+        }
+
+        .pack-card:hover {
+            border-color: var(--primary-blue);
+            transform: translateY(-5px);
+        }
+
+        .pack-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .pack-title {
+            font-size: 14px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .pack-author {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        /* Buttons */
+        .btn-primary {
+            width: 100%;
+            padding: 15px;
+            background-color: var(--primary-blue);
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            text-transform: uppercase;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.6);
+        }
+
+        /* Forms (Login/Signup) */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--card-bg);
+            border: 1px solid #333;
+            border-radius: 5px;
+            color: white;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+
+        /* Payment Box */
+        .payment-box {
+            background-color: var(--card-bg);
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .warning-text {
+            color: var(--danger-red);
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px dashed var(--danger-red);
+            border-radius: 5px;
+            background-color: rgba(255, 51, 51, 0.1);
+        }
+
+        .wallet-address {
+            background-color: #000;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+            margin-bottom: 10px;
+            border: 1px solid #444;
+        }
+
+        .plan-price {
+            font-size: 24px;
+            color: var(--primary-blue);
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        /* Tabs for demonstration */
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            background: #222;
+            color: white;
+            border: 1px solid #444;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <div class="navbar">
+        <div class="logo">DUREZ💀</div>
+        <a href="#" class="nav-btn">Login</a>
+    </div>
+
+    <!-- HOME PAGE SECTION -->
+    <div class="section">
+        <h1>Find Your Perfect Stickers</h1>
+        <input type="text" class="search-bar" placeholder="Search Gojo, Anime, Naija slang...">
+        
+        <div class="grid">
+            <!-- Pack 1 -->
+            <div class="pack-card">
+                <div class="pack-icon">👁️</div>
+                <p class="pack-title">Gojo Satoru Vol. 1</p>
+                <p class="pack-author">by DUREZ💀</p>
+            </div>
+            
+            <!-- Pack 2 -->
+            <div class="pack-card">
+                <div class="pack-icon">😂</div>
+                <p class="pack-title">Naija Reactions</p>
+                <p class="pack-author">by Mod🛡️</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGIN / SIGNUP SECTION -->
+    <div class="section">
+        <h1>Create Account</h1>
+        <div class="form-group">
+            <label>Username (Cannot be changed)</label>
+            <input type="text" placeholder="e.g. DurezKing">
+        </div>
+        <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" placeholder="you@email.com">
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" placeholder="********">
+        </div>
+        <button class="btn-primary">Sign Up</button>
+    </div>
+
+    <!-- PREMIUM PAYMENT SECTION -->
+    <div class="section">
+        <h1>Upgrade to Premium 💎</h1>
+        
+        <div class="grid" style="grid-template-columns: 1fr;">
+            <div class="pack-card">
+                <p class="pack-title">Yearly Premium (Best Value)</p>
+                <div class="plan-price">$10</div>
+                <button class="btn-primary">Select Yearly</button>
+            </div>
+        </div>
+
+        <div class="payment-box">
+            <div class="warning-text">
+                ⚠️ YOU MUST WRITE YOUR WEBSITE USERNAME IN THE PAYMENT DESCRIPTION.
+            </div>
+
+            <p style="font-size:14px; font-weight:bold; margin-bottom:5px;">Pay with USDT (BEP20)</p>
+            <div class="wallet-address">0xYourBEP20WalletAddressHere12345</div>
+
+            <p style="font-size:14px; font-weight:bold; margin-bottom:5px;">Pay with Local Bank (OPay)</p>
+            <div class="wallet-address" style="font-family: inherit;">
+                Bank: OPay<br>
+                Acc No: 8012345678<br>
+                Name: DUREZ TECH
+            </div>
+
+            <button class="btn-primary" style="background-color: white;">I Have Paid (Upload Proof)</button>
+        </div>
+    </div>
+
+</body>
+</html>
