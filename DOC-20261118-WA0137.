@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pin Saver – Pinterest Downloader</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#fff; --muted:rgba(255,255,255,.72); --red:#e60023; --red-dark:#b8001c;
+  --panel:rgba(20,12,16,.58); --line:rgba(255,255,255,.18);
+  --serif:"Fraunces",Georgia,serif; --sans:"Figtree",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{
+  font-family:var(--sans);color:var(--ink);
+  background:#1a0f14 url("https://i.ibb.co/tT1sXKwc/9c5ec4f94d8aec942a9122cc0c3e8daa.jpg") center/cover fixed no-repeat;
+  padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0);
+}
+body::before{content:"";position:fixed;inset:0;background:linear-gradient(180deg,rgba(10,5,8,.45),rgba(10,5,8,.78));z-index:-1}
+main{max-width:720px;margin:0 auto;padding:56px 20px 64px}
+h1{font-family:var(--serif);font-weight:800;font-size:clamp(2.4rem,8vw,4rem);line-height:1.02;margin:0 0 14px;letter-spacing:-.02em}
+.lead{color:var(--muted);font-size:1.05rem;line-height:1.55;margin:0 0 28px;max-width:46ch}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:18px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+form{display:flex;gap:10px;flex-wrap:wrap}
+input[type=url]{flex:1 1 260px;min-width:0;padding:15px 16px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.1);color:var(--ink);font:inherit;font-size:1rem}
+input::placeholder{color:rgba(255,255,255,.5)}
+input:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid #fff;outline-offset:2px}
+button,.btn{font:inherit;font-weight:600;border:0;border-radius:12px;padding:15px 22px;background:var(--red);color:#fff;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+button:hover,.btn:hover{background:var(--red-dark)}
+button:disabled{opacity:.6;cursor:wait}
+.ghost{background:rgba(255,255,255,.14)}
+.ghost:hover{background:rgba(255,255,255,.24)}
+.row{display:flex;gap:10px;margin-top:10px}
+#status{margin:16px 2px 0;min-height:1.4em;color:var(--muted);font-size:.95rem}
+#status.err{color:#ffb4bd}
+#result{margin-top:20px;display:none}
+.media{width:100%;max-height:70vh;object-fit:contain;border-radius:14px;background:rgba(0,0,0,.35);display:block}
+.title{font-family:var(--serif);font-size:1.25rem;margin:14px 2px 4px}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.actions .btn,.actions button{flex:1 1 180px}
+.spin{width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:s .7s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}
+footer{margin-top:28px;color:rgba(255,255,255,.55);font-size:.85rem;line-height:1.5}
+@media (prefers-reduced-motion:reduce){.spin{animation-duration:2s}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Save any Pin.</h1>
+  <p class="lead">Paste a Pinterest link and download the image or video in its original quality.</p>
+
+  <div class="panel">
+    <form id="form">
+      <input id="url" type="url" required placeholder="https://pin.it/… or pinterest.com/pin/…" aria-label="Pinterest link" autocomplete="off">
+      <button id="go" type="submit">Download</button>
+    </form>
+    <div class="row">
+      <button type="button" class="ghost" id="paste">Paste from clipboard</button>
+    </div>
+    <div id="status" role="status" aria-live="polite"></div>
+    <div id="result"></div>
+  </div>
+
+  <footer>Only download content you have the right to save. Pins belong to their creators.</footer>
+</main>
+
+<script>
+const API = "https://apis.davidcyril.name.ng/download/pinterest";
+const API_KEY = "dc_live_rQYJDgTgrsHZ9QYQHkdxIlDNk23E-EKm";
+
+const $ = id => document.getElementById(id);
+const form = $("form"), input = $("url"), go = $("go"), statusEl = $("status"), result = $("result");
+
+function setStatus(msg, err){ statusEl.textContent = msg || ""; statusEl.className = err ? "err" : ""; }
+
+$("paste").addEventListener("click", async () => {
+  try { input.value = (await navigator.clipboard.readText()).trim(); input.focus(); }
+  catch { setStatus("Clipboard access was blocked. Paste the link manually.", true); }
+});
+
+// Walk the JSON and collect every http(s) URL with its key name.
+function collect(node, key, out){
+  if (typeof node === "string") {
+    if (/^https?:\/\//i.test(node)) out.push({ key: key || "", url: node });
+  } else if (Array.isArray(node)) {
+    node.forEach(n => collect(n, key, out));
+  } else if (node && typeof node === "object") {
+    Object.entries(node).forEach(([k, v]) => collect(v, k, out));
+  }
+  return out;
+}
+const isVideo = u => /\.(mp4|m3u8|webm|mov)(\?|$)/i.test(u);
+const isImage = u => /\.(jpe?g|png|gif|webp)(\?|$)/i.test(u) || /pinimg\.com/i.test(u);
+
+function findTitle(node){
+  if (!node || typeof node !== "object") return "";
+  for (const k of ["title","description","caption","name"]) {
+    if (typeof node[k] === "string" && node[k].trim()) return node[k].trim();
+  }
+  for (const v of Object.values(node)) { const t = findTitle(v); if (t) return t; }
+  return "";
+}
+
+function pickMedia(data){
+  const links = collect(data, "", []);
+  const video = links.find(l => isVideo(l.url));
+  const images = links.filter(l => isImage(l.url) && !isVideo(l.url));
+  // Prefer the highest-quality image (originals, then largest size path).
+  const best = images.find(l => /originals/i.test(l.url)) ||
+               images.find(l => /(download|image|url|original|hd)/i.test(l.key)) ||
+               images[0];
+  const other = !video && !best ? links.find(l => /(download|url|link|media)/i.test(l.key)) : null;
+  return { video: video && video.url, image: best && best.url, other: other && other.url };
+}
+
+function filename(url, fallbackExt){
+  const m = url.split("?")[0].match(/\.([a-z0-9]{2,4})$/i);
+  return "pinterest-" + Date.now() + "." + (m ? m[1] : fallbackExt);
+}
+
+async function saveFile(url, name, btn){
+  const label = btn.textContent;
+  btn.disabled = true; btn.textContent = "Saving…";
+  try {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error();
+    const blob = await r.blob();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  } catch {
+    // The host blocks direct saving from the browser; open it so it can be saved manually.
+    window.open(url, "_blank", "noopener");
+    setStatus("Your browser blocked a direct save, so the file opened in a new tab. Press and hold or right-click it to save.");
+  } finally { btn.disabled = false; btn.textContent = label; }
+}
+
+function render(data){
+  const { video, image, other } = pickMedia(data);
+  const src = video || image || other;
+  if (!src) throw new Error("No downloadable media found for this link.");
+
+  result.innerHTML = "";
+  let el;
+  if (video && !/\.m3u8/i.test(video)) {
+    el = document.createElement("video");
+    el.controls = true; el.playsInline = true; el.src = video;
+    if (image) el.poster = image;
+  } else {
+    el = document.createElement("img");
+    el.alt = "Pin preview"; el.src = image || src;
+  }
+  el.className = "media";
+  result.appendChild(el);
+
+  const t = findTitle(data);
+  if (t) { const h = document.createElement("div"); h.className = "title"; h.textContent = t.slice(0, 140); result.appendChild(h); }
+
+  const actions = document.createElement("div"); actions.className = "actions";
+  const add = (text, url, ext) => {
+    const b = document.createElement("button"); b.type = "button"; b.textContent = text;
+    b.addEventListener("click", () => saveFile(url, filename(url, ext), b));
+    actions.appendChild(b);
+  };
+  if (video) add("Download video", video, "mp4");
+  if (image) add(video ? "Download cover image" : "Download image", image, "jpg");
+  if (!video && !image && other) add("Download file", other, "bin");
+  result.appendChild(actions);
+  result.style.display = "block";
+}
+
+form.addEventListener("submit", async e => {
+  e.preventDefault();
+  const link = input.value.trim();
+  result.style.display = "none"; result.innerHTML = "";
+  go.disabled = true; go.innerHTML = '<span class="spin"></span> Fetching';
+  setStatus("Looking up your Pin…");
+  try {
+    const u = new URL(API);
+    u.searchParams.set("url", link);
+    u.searchParams.set("apikey", API_KEY);
+    const res = await fetch(u.toString());
+    if (!res.ok) throw new Error("The download service returned an error (" + res.status + ").");
+    const data = await res.json();
+    if (data && (data.success === false || data.status === false)) {
+      throw new Error(data.message || data.error || "That link couldn't be downloaded. Check it and try again.");
+    }
+    render(data);
+    setStatus("Ready. Choose a download below.");
+  } catch (err) {
+    setStatus(err.message || "Something went wrong. Check the link and try again.", true);
+  } finally {
+    go.disabled = false; go.textContent = "Download";
+  }
+});
+</script>
+</body>
+</html>
